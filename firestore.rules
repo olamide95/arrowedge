@@ -1,0 +1,57 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // An admin is a signed-in user with an explicit allow-list document.
+    // Membership is granted by writing /admins/{uid} from the console or a
+    // trusted backend — never from the client, so nobody can promote
+    // themselves by signing up.
+    function isAdmin() {
+      return request.auth != null
+        && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    match /admins/{uid} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow write: if false; // console / Admin SDK only
+    }
+
+    // Published posts are world-readable; drafts are not. Reads are filtered
+    // by the same `status` the rule checks, so a draft never leaves the
+    // database even if someone queries the collection directly.
+    match /posts/{postId} {
+      allow read:  if resource.data.status == 'published' || isAdmin();
+      allow write: if isAdmin();
+    }
+
+    match /categories/{id} {
+      allow read:  if true;
+      allow write: if isAdmin();
+    }
+
+    // Inbound forms. Anyone may create one, nobody but an admin may read
+    // them back — these carry names, emails and phone numbers.
+    match /messages/{id} {
+      allow create: if request.resource.data.keys().hasAll(['name','email','message'])
+                    && request.resource.data.name is string
+                    && request.resource.data.name.size() > 1
+                    && request.resource.data.name.size() < 120
+                    && request.resource.data.email.matches('^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$')
+                    && request.resource.data.message.size() > 5
+                    && request.resource.data.message.size() < 5000;
+      allow read, update, delete: if isAdmin();
+    }
+
+    match /bookings/{id} {
+      allow create: if request.resource.data.keys().hasAll(['name','email','service'])
+                    && request.resource.data.email.matches('^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$');
+      allow read, update, delete: if isAdmin();
+    }
+
+    match /subscribers/{id} {
+      allow create: if request.resource.data.email is string
+                    && request.resource.data.email.matches('^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$');
+      allow read, update, delete: if isAdmin();
+    }
+  }
+}

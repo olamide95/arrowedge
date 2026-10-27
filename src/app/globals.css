@@ -1,0 +1,146 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --gold: #a88a28;
+    --gold-light: #d9c27c;
+    --ink: #12110d;
+  }
+
+  * { -webkit-tap-highlight-color: transparent; }
+
+  html { scroll-behavior: smooth; scroll-padding-top: 6rem; }
+
+  body {
+    @apply bg-ink-50 text-ink-600 font-sans antialiased;
+    font-feature-settings: 'kern' 1, 'liga' 1, 'calt' 1;
+  }
+
+  h1, h2, h3, h4 { @apply text-ink font-display; text-wrap: balance; }
+  p { text-wrap: pretty; }
+
+  ::selection { background: rgba(168,138,40,.22); color: #12110d; }
+
+  :focus-visible {
+    outline: 2px solid var(--gold);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+
+  /* Honour the OS setting. Motion here is decoration; for anyone who has
+     asked for less of it, none of it is load-bearing. */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: .01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: .01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer components {
+  .container-ae { @apply mx-auto w-full max-w-content px-5 sm:px-8 lg:px-12; }
+
+  .eyebrow {
+    @apply font-mark text-[0.7rem] uppercase tracking-[0.3em] text-gold-600;
+  }
+
+  /* The hairline above section headings — a small nod to the logo's arc. */
+  .rule-gold {
+    @apply block h-px w-14 bg-gold-sheen;
+  }
+
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-full
+           text-sm font-medium tracking-wide transition-all duration-300
+           disabled:pointer-events-none disabled:opacity-50;
+  }
+  .btn-lg { @apply px-8 text-[0.95rem]; height: 3.25rem; }
+  .btn-md { @apply h-11 px-6; }
+  .btn-sm { @apply h-9 px-4 text-[0.8rem]; }
+
+  .btn-primary {
+    @apply btn bg-ink text-ink-50 shadow-lift
+           hover:bg-gold-500 hover:text-ink hover:shadow-gold
+           active:translate-y-px;
+  }
+  .btn-gold {
+    @apply btn text-ink shadow-gold active:translate-y-px;
+    background-image: linear-gradient(103deg,#8E7421,#A88A28 32%,#D9C27C 52%,#A88A28 70%,#8E7421);
+    background-size: 200% auto;
+    transition: background-position .6s ease, transform .2s ease, box-shadow .3s ease;
+  }
+  .btn-gold:hover { background-position: right center; }
+  .btn-outline {
+    @apply btn border border-ink-200 bg-white/60 text-ink
+           hover:border-gold-500 hover:bg-white hover:text-gold-700;
+  }
+  .btn-ghost {
+    @apply btn text-ink-500 hover:bg-ink-100 hover:text-ink;
+  }
+
+  .card {
+    @apply rounded-2xl border border-ink-100 bg-white shadow-lift
+           transition-all duration-500;
+  }
+  .card-hover {
+    @apply hover:-translate-y-1 hover:border-gold-200 hover:shadow-liftLg;
+  }
+
+  .field {
+    @apply h-12 w-full rounded-xl border border-ink-200 bg-white px-4 text-[0.95rem]
+           text-ink placeholder:text-ink-400
+           focus:border-gold-500 focus:outline-none focus:ring-4 focus:ring-gold-500/12
+           transition duration-200;
+  }
+  .field-area { @apply min-h-[9rem] py-3.5; height: auto; }
+  .label { @apply mb-2 block text-[0.8rem] font-medium tracking-wide text-ink-600; }
+
+  /* Underline that grows from the left — used on nav and inline links. */
+  .link-underline {
+    @apply relative;
+  }
+  .link-underline::after {
+    content: '';
+    @apply absolute -bottom-0.5 left-0 h-px w-0 bg-gold-500 transition-all duration-300;
+  }
+  .link-underline:hover::after { @apply w-full; }
+
+  .grain {
+    position: relative;
+  }
+  /* A faint paper tooth. Keeps large flat panels from looking like plastic. */
+  .grain::after {
+    content: '';
+    position: absolute; inset: 0; pointer-events: none; opacity: .5;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='.035'/%3E%3C/svg%3E");
+  }
+}
+
+@layer utilities {
+  .text-gradient-gold {
+    background-image: linear-gradient(103deg,#8E7421,#A88A28 30%,#D9C27C 55%,#A88A28 78%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .mask-fade-b {
+    -webkit-mask-image: linear-gradient(to bottom,#000 70%,transparent);
+    mask-image: linear-gradient(to bottom,#000 70%,transparent);
+  }
+}
+
+/* Scroll-reveal. Elements start hidden only once JS confirms it can reveal
+   them, so with JS disabled the page is fully readable rather than blank. */
+[data-reveal] { opacity: 1; }
+html.js [data-reveal] {
+  opacity: 0; transform: translateY(22px);
+  transition: opacity .8s cubic-bezier(.22,.8,.3,1), transform .8s cubic-bezier(.22,.8,.3,1);
+}
+html.js [data-reveal].in { opacity: 1; transform: none; }
+
+::-webkit-scrollbar { width: 11px; height: 11px; }
+::-webkit-scrollbar-track { background: #F1EEE6; }
+::-webkit-scrollbar-thumb { background: #DED9CC; border-radius: 99px; border: 3px solid #F1EEE6; }
+::-webkit-scrollbar-thumb:hover { background: #C5A54B; }
