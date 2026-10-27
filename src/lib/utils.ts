@@ -24,11 +24,45 @@ export function readingMinutes(markdown: string) {
   return Math.max(1, Math.round(words / 225));
 }
 
-export function formatDate(ms: number | null, opts?: Intl.DateTimeFormatOptions) {
-  if (!ms) return '';
+/**
+ * Accepts whatever a date actually arrives as. Server components get
+ * milliseconds (normalised in `lib/posts.ts`), but the admin screens read
+ * Firestore through the web SDK and get a `Timestamp` object — and a document
+ * written with `serverTimestamp()` reads back as `null` for a moment before
+ * the server's value lands. All three have to render without throwing.
+ */
+type DateLike =
+  | number
+  | string
+  | Date
+  | { toDate: () => Date }
+  | { seconds: number }
+  | null
+  | undefined;
+
+function toDate(value: DateLike): Date | null {
+  if (value == null) return null;
+  if (value instanceof Date) return value;
+  if (typeof value === 'number') return new Date(value);
+  if (typeof value === 'string') return new Date(value);
+  // Firestore Timestamp, either hydrated by the SDK or as a plain object
+  // after passing through serialisation.
+  if (typeof (value as any).toDate === 'function') {
+    try { return (value as any).toDate(); } catch { return null; }
+  }
+  if (typeof (value as any).seconds === 'number') {
+    return new Date((value as any).seconds * 1000);
+  }
+  return null;
+}
+
+export function formatDate(value: DateLike, opts?: Intl.DateTimeFormatOptions) {
+  const date = toDate(value);
+  // An unparseable value renders as nothing rather than taking the page down.
+  if (!date || Number.isNaN(date.getTime())) return '';
   return new Intl.DateTimeFormat('en-NG', {
     day: 'numeric', month: 'long', year: 'numeric', ...opts,
-  }).format(new Date(ms));
+  }).format(date);
 }
 
 /** Pulls `## headings` out of markdown for the article table of contents. */
